@@ -65,9 +65,19 @@ with QUAL strictly greater. Sites at exactly the threshold appear in neither col
 - QUAL `.` (missing) is treated as −1 and creates a row with
   `QUAL_THRESHOLD=-1`.
 - Same Ts/Tv classification as by-count (biallelic SNPs only).
-- Note: vcftools 0.1.17 has an uninitialized-memory bug in the `N_Tv_GT` column
-  of the last threshold row; this implementation outputs the correct value (0)
-  instead.
+
+## Boundaries
+
+Byte-identical to `vcftools 0.1.17` except for the two cases below, where
+vcftools is wrong or the input is malformed. These are intentionally not
+replicated and are excluded from the byte-identity goldens.
+
+- **Last (max) threshold row, `N_Tv_GT` column.** No site has QUAL strictly
+  greater than the maximum threshold, so the correct value is 0. vcftools reads
+  this cell from uninitialized memory and prints non-deterministic garbage (e.g.
+  `2.45273e-313`). This implementation prints the deterministic `0` / `nan`.
+- **Out-of-range allele index in a GT** (e.g. `2/2` at a biallelic site). The
+  input is malformed; vcftools and this tool may disagree. Left as a boundary.
 
 ## Origin
 

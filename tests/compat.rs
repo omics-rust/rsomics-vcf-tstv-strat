@@ -128,6 +128,16 @@ fn by_qual_basic() {
 }
 
 #[test]
+fn by_qual_large_thresh() {
+    // Large QUAL thresholds and sub-1e-4 values exercise C %g scientific notation:
+    // 1000000 -> "1e+06", 12345678 -> "1.23457e+07", 0.00005 -> "5e-05".
+    // Last row's N_Tv_GT is deterministic 0 here (vcftools prints uninitialized garbage).
+    let vcf = include_str!("golden/by_qual_large_thresh.vcf");
+    let expected = include_str!("golden/by_qual_large_thresh.qual");
+    assert_eq!(run_qual(vcf), expected);
+}
+
+#[test]
 fn by_qual_dot_qual() {
     // QUAL=. is treated as -1.0 and creates a row with QUAL_THRESHOLD=-1.
     let vcf = include_str!("golden/by_qual_dot_qual.vcf");
