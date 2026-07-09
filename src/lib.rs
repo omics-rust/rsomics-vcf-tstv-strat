@@ -2,6 +2,7 @@
 
 use std::io::BufRead;
 
+use rsomics_common::fmt::format_g6;
 use rsomics_common::{Result, RsomicsError};
 use serde::Serialize;
 
@@ -37,44 +38,6 @@ pub fn fmt_tstv(n_ts: u64, n_tv: u64) -> String {
         return "inf".to_owned();
     }
     format_g6(n_ts as f64 / n_tv as f64)
-}
-
-/// Reproduce C `printf("%g", x)` with precision 6: fixed notation when the
-/// post-rounding decimal exponent is in `-4..6`, scientific otherwise; trailing
-/// zeros and a bare `.` are stripped; lowercase nan/inf; 0 prints as "0".
-fn format_g6(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".to_owned();
-    }
-    if x.is_infinite() {
-        return if x < 0.0 { "-inf" } else { "inf" }.to_owned();
-    }
-    if x == 0.0 {
-        return "0".to_owned();
-    }
-    const PRECISION: i32 = 6;
-    let sci = format!("{:.*e}", (PRECISION - 1) as usize, x);
-    let (mantissa, exp_str) = sci.split_once('e').unwrap();
-    let exp: i32 = exp_str.parse().unwrap();
-    if (-4..PRECISION).contains(&exp) {
-        let decimals = (PRECISION - 1 - exp).max(0) as usize;
-        strip_g(format!("{x:.decimals$}"))
-    } else {
-        let sign = if exp < 0 { '-' } else { '+' };
-        format!("{}e{}{:02}", strip_g(mantissa.to_owned()), sign, exp.abs())
-    }
-}
-
-fn strip_g(mut s: String) -> String {
-    if s.contains('.') {
-        while s.ends_with('0') {
-            s.pop();
-        }
-        if s.ends_with('.') {
-            s.pop();
-        }
-    }
-    s
 }
 
 /// Classify a biallelic SNP as transition (true) or transversion (false).
